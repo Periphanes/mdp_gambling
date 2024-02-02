@@ -106,13 +106,12 @@ def simulate(policy):
         action = policy[state]
         new_state = np.random.choice(range(N_STATES), p=P[state][action])
 
-        print(action)
-        print(new_state)
-
-        exit(0)
-
         if action <= 5:
             gambling_count += 1    
+
+        state = new_state
+
+    return gambling_count
 
 gamma = 0.75
 
@@ -148,6 +147,14 @@ while is_value_changed:
 
     print ("Iterations:", iterations)
     # print "Policy now", policy
+
+    simulation_count = 100
+    simulation_results = []
+    
+    for _ in range(simulation_count):
+        simulation_results.append(simulate(policy))
+    
+    print(simulation_results)
 
 print("Final policy")
 print("policy")
