@@ -1,88 +1,108 @@
-import mdptoolbox, mdptoolbox.example
+# Initial Code taken from https://gist.github.com/tuxdna/7e29dd37300e308a80fc1559c343c545
+
+#!/usr/bin/env python
+# coding=utf-8
 import numpy as np
-
-testMDP = mdptoolbox.mdp.MDP(1,1,1,1,1)
-
-# MDP Class Docs
+import random
 
 """
+1: Procedure Policy_Iteration(S,A,P,R)
+2:           Inputs
+3:                     S is the set of all states
+4:                     A is the set of all actions
+5:                     P is state transition function specifying P(s'|s,a)
+6:                     R is a reward function R(s,a,s')
+7:           Output
+8:                     optimal policy π
+9:           Local
+10:                     action array π[S]
+11:                     Boolean variable noChange
+12:                     real array V[S]
+13:           set π arbitrarily
+14:           repeat
+15:                     noChange ←true
+16:                     Solve V[s] = ∑s'∈S P(s'|s,π[s])(R(s,a,s')+γV[s'])
+17:                     for each s∈S do
+18:                               Let QBest=V[s]
+19:                               for each a ∈A do
+20:                                         Let Qsa=∑s'∈S P(s'|s,a)(R(s,a,s')+γV[s'])
+21:                                         if (Qsa > QBest) then
+22:                                                   π[s]←a
+23:                                                   QBest ←Qsa
+24:                                                   noChange ←false
+25:           until noChange
+26:           return π
+"""
 
-A Markov Decision Problem.
 
-Let ``S`` = the number of states, and ``A`` = the number of acions.
-
-Parameters
-----------
-transitions : array
-    Transition probability matrices. These can be defined in a variety of
-    ways. The simplest is a numpy array that has the shape ``(A, S, S)``,
-    though there are other possibilities. It can be a tuple or list or
-    numpy object array of length ``A``, where each element contains a numpy
-    array or matrix that has the shape ``(S, S)``. This "list of matrices"
-    form is useful when the transition matrices are sparse as
-    ``scipy.sparse.csr_matrix`` matrices can be used. In summary, each
-    action's transition matrix must be indexable like ``transitions[a]``
-    where ``a`` ∈ {0, 1...A-1}, and ``transitions[a]`` returns an ``S`` ×
-    ``S`` array-like object.
-reward : array
-    Reward matrices or vectors. Like the transition matrices, these can
-    also be defined in a variety of ways. Again the simplest is a numpy
-    array that has the shape ``(S, A)``, ``(S,)`` or ``(A, S, S)``. A list
-    of lists can be used, where each inner list has length ``S`` and the
-    outer list has length ``A``. A list of numpy arrays is possible where
-    each inner array can be of the shape ``(S,)``, ``(S, 1)``, ``(1, S)``
-    or ``(S, S)``. Also ``scipy.sparse.csr_matrix`` can be used instead of
-    numpy arrays. In addition, the outer list can be replaced by any object
-    that can be indexed like ``reward[a]`` such as a tuple or numpy object
-    array of length ``A``.
-discount : float
-    Discount factor. The per time-step discount factor on future rewards.
-    Valid values are greater than 0 upto and including 1. If the discount
-    factor is 1, then convergence is cannot be assumed and a warning will
-    be displayed. Subclasses of ``MDP`` may pass ``None`` in the case where
-    the algorithm does not use a discount factor.
-epsilon : float
-    Stopping criterion. The maximum change in the value function at each
-    iteration is compared against ``epsilon``. Once the change falls below
-    this value, then the value function is considered to have converged to
-    the optimal value function. Subclasses of ``MDP`` may pass ``None`` in
-    the case where the algorithm does not use an epsilon-optimal stopping
-    criterion.
-max_iter : int
-    Maximum number of iterations. The algorithm will be terminated once
-    this many iterations have elapsed. This must be greater than 0 if
-    specified. Subclasses of ``MDP`` may pass ``None`` in the case where
-    the algorithm does not use a maximum number of iterations.
-
-Attributes
-----------
-P : array
-    Transition probability matrices.
-R : array
-    Reward vectors.
-V : tuple
-    The optimal value function. Each element is a float corresponding to
-    the expected value of being in that state assuming the optimal policy
-    is followed.
-discount : float
-    The discount rate on future rewards.
-max_iter : int
-    The maximum number of iterations.
-policy : tuple
-    The optimal policy.
-time : float
-    The time used to converge to the optimal policy.
-verbose : boolean
-    Whether verbose output should be displayed or not.
-
-Methods
--------
-run
-    Implemented in child classes as the main algorithm loop. Raises an
-    exception if it has not been overridden.
-setSilent
-    Turn the verbosity off
-setVerbose
-    Turn the verbosity on
+# 0.01 * 10 + 0.04 * 5 + 0.05 * 2 + 0.4 * 1 + 0.2 * 0.8 + 0.3 * 0 = 0.96
 
 """
+0.01 prob for 10x
+0.04 prob for 5x
+0.05 prob for 2x
+0.40 prob for 1x
+0.20 prob for 0.8x
+0.30 prob for 0x
+"""
+
+
+states = [i for i in range(500)]
+actions = [i for i in range(100)]
+N_STATES = len(states)
+N_ACTIONS = len(actions)
+P = np.zeros((N_STATES, N_ACTIONS, N_STATES))  # transition probability
+R = np.zeros((N_STATES, N_ACTIONS, N_STATES))  # rewards
+
+P[0,0,1] = 1.0
+P[1,1,2] = 1.0
+P[2,0,3] = 1.0
+P[3,1,4] = 1.0
+P[4,0,4] = 1.0
+
+
+R[0,0,1] = 1
+R[1,1,2] = 10
+R[2,0,3] = 100
+R[3,1,4] = 1000
+R[4,0,4] = 1.0
+
+
+gamma = 0.75
+
+# initialize policy and value arbitrarily
+policy = [random.randint(0, len(N_ACTIONS) - 1) for s in range(N_STATES)]
+V = np.zeros(N_STATES)
+
+print("Initial policy", policy)
+# print V
+# print P
+# print R
+
+is_value_changed = True
+iterations = 0
+while is_value_changed:
+    is_value_changed = False
+    iterations += 1
+    # run value iteration for each state
+    for s in range(N_STATES):
+        V[s] = sum([P[s,policy[s],s1] * (R[s,policy[s],s1] + gamma*V[s1]) for s1 in range(N_STATES)])
+        # print "Run for state", s
+
+    for s in range(N_STATES):
+        q_best = V[s]
+        # print "State", s, "q_best", q_best
+        for a in range(N_ACTIONS):
+            q_sa = sum([P[s, a, s1] * (R[s, a, s1] + gamma * V[s1]) for s1 in range(N_STATES)])
+            if q_sa > q_best:
+                print("State", s, ": q_sa", q_sa, "q_best", q_best)
+                policy[s] = a
+                q_best = q_sa
+                is_value_changed = True
+
+    print ("Iterations:", iterations)
+    # print "Policy now", policy
+
+print("Final policy")
+print("policy")
+print(V)
