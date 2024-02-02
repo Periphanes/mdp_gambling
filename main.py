@@ -38,40 +38,63 @@ import random
 # 0.01 * 10 + 0.04 * 5 + 0.05 * 2 + 0.4 * 1 + 0.2 * 0.8 + 0.3 * 0 = 0.96
 
 """
-0.01 prob for 10x
-0.04 prob for 5x
-0.05 prob for 2x
-0.40 prob for 1x
-0.20 prob for 0.8x
-0.30 prob for 0x
+0 - 0.01 prob for 10x
+1 - 0.04 prob for 5x
+2 - 0.05 prob for 2x
+3 - 0.40 prob for 1x
+4 - 0.20 prob for 0.8x
+5 - 0.30 prob for 0x
+6 ~ 19 - 1 mean state
 """
-
 
 states = [i for i in range(500)]
 actions = [i for i in range(100)]
+
 N_STATES = len(states)
 N_ACTIONS = len(actions)
+
 P = np.zeros((N_STATES, N_ACTIONS, N_STATES))  # transition probability
 R = np.zeros((N_STATES, N_ACTIONS, N_STATES))  # rewards
 
-P[0,0,1] = 1.0
-P[1,1,2] = 1.0
-P[2,0,3] = 1.0
-P[3,1,4] = 1.0
-P[4,0,4] = 1.0
+
+# Actions 0 ~ 4 encode actions of gambling
+# Actions 5 ~ 99 encode actions of normal life with mean reward of 1, with Gaussian distribution
 
 
-R[0,0,1] = 1
-R[1,1,2] = 10
-R[2,0,3] = 100
-R[3,1,4] = 1000
-R[4,0,4] = 1.0
+for i in range(N_STATES):
+    for j in range(N_ACTIONS):
+        k = random.randint(0, N_STATES-1)
+        if j == 0:
+            P[i][j][k] = 0.01
+            R[i][j][k] = 10
+        elif j == 1:
+            P[i][j][k] = 0.04
+            R[i][j][k] = 5
+        elif j == 2:
+            P[i][j][k] = 0.05
+            R[i][j][k] = 2
+        elif j == 3:
+            P[i][j][k] = 0.40
+            R[i][j][k] = 1
+        elif j == 4:
+            P[i][j][k] = 0.20
+            R[i][j][k] = 0.8
+        elif j == 5:
+            P[i][j][k] = 0.30
+        else:
+            rand_dist = np.random.rand(N_STATES)
+            rand_dist = rand_dist / np.sum(rand_dist)
+
+            P[i][j] = rand_dist
+
+            rand_gaussian = np.random.normal(1, 0.1, N_STATES)
+            R[i][j] = rand_gaussian
 
 
 gamma = 0.75
 
 # initialize policy and value arbitrarily
-policy = [random.randint(0, len(N_ACTIONS) - 1) for s in range(N_STATES)]
+policy = [random.randint(0, N_ACTIONS - 1) for s in range(N_STATES)]
 V = np.zeros(N_STATES)
 
 print("Initial policy", policy)
@@ -95,7 +118,7 @@ while is_value_changed:
         for a in range(N_ACTIONS):
             q_sa = sum([P[s, a, s1] * (R[s, a, s1] + gamma * V[s1]) for s1 in range(N_STATES)])
             if q_sa > q_best:
-                print("State", s, ": q_sa", q_sa, "q_best", q_best)
+                # print("State", s, ": q_sa", q_sa, "q_best", q_best)
                 policy[s] = a
                 q_best = q_sa
                 is_value_changed = True
