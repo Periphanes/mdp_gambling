@@ -4,6 +4,7 @@
 # coding=utf-8
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 
 seed = 42
 random.seed(seed)
@@ -113,16 +114,13 @@ def simulate(policy):
 
     return gambling_count
 
-gamma = 0.99
+gamma = 0.80
 
 # initialize policy and value arbitrarily
 policy = [random.randint(0, N_ACTIONS - 1) for s in range(N_STATES)]
 V = np.zeros(N_STATES)
 
-print("Initial policy", policy)
-# print V
-# print P
-# print R
+print("Initialization Complete")
 
 is_value_changed = True
 iterations = 0
@@ -134,24 +132,19 @@ final_iteration_results = []
 for _ in range(policy_iteration_count):
     is_value_changed = False
     iterations += 1
-    # run value iteration for each state
     for s in range(N_STATES):
         V[s] = sum([P[s,policy[s],s1] * (R[s,policy[s],s1] + gamma*V[s1]) for s1 in range(N_STATES)])
-        # print "Run for state", s
 
     for s in range(N_STATES):
         q_best = V[s]
-        # print "State", s, "q_best", q_best
         for a in range(N_ACTIONS):
             q_sa = sum([P[s, a, s1] * (R[s, a, s1] + gamma * V[s1]) for s1 in range(N_STATES)])
             if q_sa > q_best:
-                # print("State", s, ": q_sa", q_sa, "q_best", q_best)
                 policy[s] = a
                 q_best = q_sa
                 is_value_changed = True
 
     print ("Iterations:", iterations)
-    # print "Policy now", policy
 
     simulation_count = 100
     simulation_results = []
@@ -166,4 +159,10 @@ print("Final policy")
 print("policy")
 print(V)
 
+np_range = np.array([i for i in range(policy_iteration_count)])
+mean = np.array([np.mean(i) for i in final_iteration_results])
+std = np.array([np.std(i) for i in final_iteration_results])
 
+plt.errorbar(np_range, mean, std, linestyle='None', marker='^')
+
+plt.show()
