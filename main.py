@@ -5,6 +5,10 @@
 import numpy as np
 import random
 
+seed = 42
+random.seed(seed)
+np.random.seed(seed)
+
 """
 1: Procedure Policy_Iteration(S,A,P,R)
 2:           Inputs
