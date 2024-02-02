@@ -97,6 +97,22 @@ for i in range(N_STATES):
             rand_gaussian = np.random.normal(1, 0.1, N_STATES)
             R[i][j] = rand_gaussian
 
+def simulate(policy):
+    state = random.randint(0, N_STATES-1)
+    simulation_iter = 1000
+    gambling_count = 0
+
+    for _ in range(simulation_iter):
+        action = policy[state]
+        new_state = np.random.choice(range(N_STATES), p=P[state][action])
+
+        print(action)
+        print(new_state)
+
+        exit(0)
+
+        if action <= 5:
+            gambling_count += 1    
 
 gamma = 0.75
 
