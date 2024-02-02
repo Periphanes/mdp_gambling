@@ -67,28 +67,31 @@ R = np.zeros((N_STATES, N_ACTIONS, N_STATES))  # rewards
 
 for i in range(N_STATES):
     for j in range(N_ACTIONS):
-        k = random.randint(0, N_STATES-1)
-        if j == 0:
-            P[i][j][k] = 0.01
-            R[i][j][k] = 10
-        elif j == 1:
-            P[i][j][k] = 0.04
-            R[i][j][k] = 5
-        elif j == 2:
-            P[i][j][k] = 0.05
-            R[i][j][k] = 2
-        elif j == 3:
-            P[i][j][k] = 0.40
-            R[i][j][k] = 1
-        elif j == 4:
-            P[i][j][k] = 0.20
-            R[i][j][k] = 0.8
-        elif j == 5:
-            P[i][j][k] = 0.30
+        if j < 5:
+            gambling_states = random.sample(range(N_STATES), 6)
+            for k in range(N_STATES):
+                if k == gambling_states[0]:
+                    P[i][j][k] = 0.01
+                    R[i][j][k] = 10
+                elif k == gambling_states[1]:
+                    P[i][j][k] = 0.04
+                    R[i][j][k] = 5
+                elif k == gambling_states[2]:
+                    P[i][j][k] = 0.05
+                    R[i][j][k] = 2
+                elif k == gambling_states[3]:
+                    P[i][j][k] = 0.40
+                    R[i][j][k] = 1
+                elif k == gambling_states[4]:
+                    P[i][j][k] = 0.20
+                    R[i][j][k] = 0.8
+                elif k == gambling_states[5]:
+                    P[i][j][k] = 0.30
+        
         else:
             rand_dist = np.random.rand(N_STATES)
             rand_dist = rand_dist / np.sum(rand_dist)
-
+        
             P[i][j] = rand_dist
 
             rand_gaussian = np.random.normal(1, 0.1, N_STATES)
