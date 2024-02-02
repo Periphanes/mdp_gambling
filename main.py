@@ -45,7 +45,7 @@ np.random.seed(seed)
 0 - 0.01 prob for 10x
 1 - 0.04 prob for 5x
 2 - 0.05 prob for 2x
-3 - 0.40 prob for 1x
+3 - 0.40 prob for 1.05x
 4 - 0.20 prob for 0.8x
 5 - 0.30 prob for 0x
 6 ~ 19 - 1 mean state
@@ -81,7 +81,7 @@ for i in range(N_STATES):
                     R[i][j][k] = 2
                 elif k == gambling_states[3]:
                     P[i][j][k] = 0.40
-                    R[i][j][k] = 1
+                    R[i][j][k] = 1.05
                 elif k == gambling_states[4]:
                     P[i][j][k] = 0.20
                     R[i][j][k] = 0.8
@@ -113,7 +113,7 @@ def simulate(policy):
 
     return gambling_count
 
-gamma = 0.75
+gamma = 0.99
 
 # initialize policy and value arbitrarily
 policy = [random.randint(0, N_ACTIONS - 1) for s in range(N_STATES)]
@@ -126,7 +126,12 @@ print("Initial policy", policy)
 
 is_value_changed = True
 iterations = 0
-while is_value_changed:
+
+policy_iteration_count = 20
+
+final_iteration_results = []
+
+for _ in range(policy_iteration_count):
     is_value_changed = False
     iterations += 1
     # run value iteration for each state
@@ -154,8 +159,11 @@ while is_value_changed:
     for _ in range(simulation_count):
         simulation_results.append(simulate(policy))
     
-    print(simulation_results)
+    simulation_results = np.array(simulation_results)
+    final_iteration_results.append(simulation_results)
 
 print("Final policy")
 print("policy")
 print(V)
+
+
